@@ -20,6 +20,15 @@ Each indicator can be toggled independently in **Settings → Iris**. Changes ap
 
 Both indicators show the same explanation: “This file is marked as agent-authored because it contains the #agent-authored tag.”
 
+## Commands
+
+With a Markdown note active, open the command palette:
+
+- **Iris: Add agent-authored tag to file properties** adds `agent-authored` to the note's file-level `tags` property. Existing tags and other properties are preserved, and the property tag is not duplicated.
+- **Iris: Remove agent-authored tag from file properties** removes the exact tag only from the file-level `tags` property. All inline tags and the note body are left untouched.
+
+These commands work in reading and editing views, and can be assigned hotkeys in Obsidian's settings. Tag matching remains case-insensitive. Property edits use Obsidian's frontmatter API, which may reformat YAML. The indicators still recognize inline `#agent-authored` tags, so unmarking the property does not hide them if an inline tag remains. Remove inline tags manually when needed.
+
 ## Screenshots
 
 The banner identifies the open note, while the right-aligned explorer markers make tagged files easy to spot.
@@ -49,7 +58,7 @@ Requires Obsidian 1.8.7 or newer (for the native click-triggered tooltip API). I
 3. Copy `main.js`, `manifest.json`, and `styles.css` into that directory.
 4. In Obsidian, enable community plugins, then enable **Iris** under **Settings → Community plugins**. Restart Obsidian if it does not appear.
 
-The plugin uses no network services, telemetry, accounts, or paid APIs. It never writes to notes or accesses files outside the vault. Only its two preferences are saved to plugin data.
+The plugin uses no network services, telemetry, accounts, or paid APIs, and does not access files outside the vault. It changes notes only when you invoke a marking/unmarking command. Only its two preferences are saved to plugin data.
 
 ## Development
 
@@ -69,7 +78,7 @@ npm run build
 ### Structure
 
 - `src/main.ts`: plugin startup, preferences, and component ownership.
-- `src/authorship.ts`: one source of truth for the authorship tag and detection.
+- `src/authorship.ts`: one source of truth for the authorship tag, detection, and tag edits.
 - `src/highlights.ts`: the highlight feature, with lifecycle-managed events, observers, and cleanup. The explorer's non-public DOM selectors are confined here.
 - `src/settings.ts`: two preferences, shared definitions for modern settings search and older hosts.
 - `styles.css`: namespaced, theme-aware decorations using logical spacing for RTL layouts.

@@ -34,10 +34,16 @@ export class MarkdownView {
   constructor(public file: TFile | null) {}
 }
 
-export function getAllTags(cache: { tags?: { tag: string }[]; frontmatter?: { tags: string[] } }) {
+export function parseFrontMatterTags(frontmatter?: { tags?: string | string[] | null } | null) {
+  const value = frontmatter?.tags;
+  const tags = typeof value === 'string' ? [value] : value ?? [];
+  return tags.filter(Boolean).map(tag => tag.startsWith('#') ? tag : `#${tag}`);
+}
+
+export function getAllTags(cache: { tags?: { tag: string }[]; frontmatter?: { tags?: string | string[] | null } }) {
   return [
     ...(cache.tags ?? []).map(item => item.tag),
-    ...(cache.frontmatter?.tags ?? []).map(tag => tag.startsWith('#') ? tag : `#${tag}`),
+    ...parseFrontMatterTags(cache.frontmatter),
   ];
 }
 
