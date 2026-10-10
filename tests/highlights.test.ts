@@ -57,12 +57,15 @@ describe('agent-authored highlights', () => {
     vi.useRealTimers();
   });
 
-  it('matches the exact tag, case-insensitively, in parsed inline or frontmatter tags', () => {
-    for (const cache of [tagged, { tags: [{ tag: '#AGENT-AUTHORED' }] }]) {
+  it('matches the root tag and descendants, case-insensitively, in inline or frontmatter tags', () => {
+    for (const cache of [tagged, { tags: [{ tag: '#AGENT-AUTHORED' }] },
+      { tags: [{ tag: '#agent-authored/reviewed' }] },
+      { frontmatter: { tags: ['AGENT-AUTHORED/reviewed/by-human'] } }]) {
       expect(isAgentAuthored(cache as CachedMetadata)).toBe(true);
     }
-    for (const cache of [null, {}, { tags: [{ tag: '#agent-authored/reviewed' }] },
-      { tags: [{ tag: '#agent-authoredness' }] }]) {
+    for (const cache of [null, {}, { tags: [{ tag: '#agent-authoredness' }] },
+      { tags: [{ tag: '#agent-authoredness/reviewed' }] },
+      { frontmatter: { tags: ['team/agent-authored'] } }]) {
       expect(isAgentAuthored(cache as CachedMetadata | null)).toBe(false);
     }
   });
@@ -77,15 +80,15 @@ describe('agent-authored highlights', () => {
     expect(banner.textContent).toBe('This file is agent-authored.');
     const info = banner.querySelector('button')!;
     expect(info.getAttribute('aria-label')).toBe(
-      'This file is marked as agent-authored because it contains the #agent-authored tag.',
+      'This file is marked as agent-authored because it contains #agent-authored or one of its nested tags.',
     );
     expect(f.rows[0]!.querySelector('[role="img"]')!.getAttribute('aria-label')).toBe(
-      'This file is marked as agent-authored because it contains the #agent-authored tag.',
+      'This file is marked as agent-authored because it contains #agent-authored or one of its nested tags.',
     );
     expect(info.tabIndex).toBe(0);
     info.click();
     expect(document.querySelector('[role="tooltip"]')?.textContent).toBe(
-      'This file is marked as agent-authored because it contains the #agent-authored tag.',
+      'This file is marked as agent-authored because it contains #agent-authored or one of its nested tags.',
     );
     info.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(count('[role="tooltip"]')).toBe(0);
@@ -139,7 +142,7 @@ describe('agent-authored highlights', () => {
     await settle();
     expect(count('.iris-authored-banner, .iris-authored-dot')).toBe(0);
 
-    f.cache.set('Human.md', tagged);
+    f.cache.set('Human.md', { frontmatter: { tags: ['agent-authored/reviewed'] } });
     f.metadataCache.trigger('changed');
     await settle();
     expect(count('.iris-authored-banner')).toBe(1);

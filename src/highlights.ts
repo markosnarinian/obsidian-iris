@@ -4,7 +4,7 @@ import type { IrisSettings } from './settings';
 
 const DOT = 'iris-authored-dot';
 const BANNER = 'iris-authored-banner';
-const EXPLANATION = `This file is marked as agent-authored because it contains the ${AGENT_AUTHORED_TAG} tag.`;
+const EXPLANATION = `This file is marked as agent-authored because it contains ${AGENT_AUTHORED_TAG} or one of its nested tags.`;
 
 /** Owns only Iris decorations; never replaces host content or styles. */
 export class AuthorshipHighlights extends Component {

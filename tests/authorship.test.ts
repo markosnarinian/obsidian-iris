@@ -41,24 +41,30 @@ describe('authorship tag edits', () => {
     await setAgentAuthored(inline.app, inline.file, true);
     expect(inline.frontmatter).toEqual({ tags: ['agent-authored'] });
     expect(inline.body()).toBe('#AGENT-AUTHORED');
+    const exact = note({ tags: ['#AGENT-AUTHORED', 'agent-authored/reviewed'] });
+    await setAgentAuthored(exact.app, exact.file, true);
+    expect(exact.frontmatter.tags).toEqual(['#AGENT-AUTHORED', 'agent-authored/reviewed']);
   });
 
   it('unmarks only property tags, preserving all inline tags and body text', async () => {
     const f = note(
-      { tags: ['research', '#AGENT-AUTHORED', 'agent-authored', 'agent-authored/reviewed'], title: 'Keep' },
+      { tags: ['research', '#AGENT-AUTHORED', 'agent-authored', 'agent-authored/reviewed',
+        '#AGENT-AUTHORED/reviewed/by-human', 'agent-authoredness/reviewed', 'team/agent-authored'], title: 'Keep' },
       'Start #AGENT-AUTHORED, then #agent-authored. Keep #agent-authored/reviewed and `#agent-authored`.',
       ['#AGENT-AUTHORED', '#agent-authored'],
     );
     await setAgentAuthored(f.app, f.file, false);
-    expect(f.frontmatter).toEqual({ tags: ['research', 'agent-authored/reviewed'], title: 'Keep' });
+    expect(f.frontmatter).toEqual({ tags: ['research', 'agent-authoredness/reviewed', 'team/agent-authored'], title: 'Keep' });
     expect(f.body()).toBe('Start #AGENT-AUTHORED, then #agent-authored. Keep #agent-authored/reviewed and `#agent-authored`.');
-    const only = note({ tags: 'agent-authored', title: 'Keep' });
-    await setAgentAuthored(only.app, only.file, false);
-    expect(only.frontmatter).toEqual({ title: 'Keep' });
-    const inlineOnly = note({}, '#agent-authored', ['#agent-authored']);
+    for (const tags of ['agent-authored', 'agent-authored/reviewed/by-human']) {
+      const only = note({ tags, title: 'Keep' });
+      await setAgentAuthored(only.app, only.file, false);
+      expect(only.frontmatter).toEqual({ title: 'Keep' });
+    }
+    const inlineOnly = note({}, '#agent-authored/reviewed', ['#agent-authored/reviewed']);
     await setAgentAuthored(inlineOnly.app, inlineOnly.file, false);
     expect(inlineOnly.frontmatter).toEqual({});
-    expect(inlineOnly.body()).toBe('#agent-authored');
+    expect(inlineOnly.body()).toBe('#agent-authored/reviewed');
   });
 
   it('rejects invalid tags properties rather than discarding their contents', async () => {

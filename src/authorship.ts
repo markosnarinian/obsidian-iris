@@ -3,7 +3,9 @@ import { getAllTags, parseFrontMatterTags, type App, type CachedMetadata, type T
 export const AGENT_AUTHORED_TAG = '#agent-authored';
 
 function matchesAuthorshipTag(tag: string): boolean {
-  return tag.replace(/^#/, '').toLowerCase() === AGENT_AUTHORED_TAG.slice(1);
+  const normalized = tag.replace(/^#/, '').toLowerCase();
+  const root = AGENT_AUTHORED_TAG.slice(1);
+  return normalized === root || normalized.startsWith(`${root}/`);
 }
 
 /** Obsidian's parsed metadata excludes code and supports frontmatter tags. */
@@ -24,8 +26,9 @@ export async function setAgentAuthored(app: App, file: TFile, authored: boolean)
       throw new Error('The tags property must be text or a list of text tags.');
     }
     const tags = parseFrontMatterTags({ tags: value }) ?? [];
-    if (authored && tags.some(matchesAuthorshipTag)) return;
-    const remaining = tags.filter(tag => !matchesAuthorshipTag(tag)).map(tag => tag.slice(1));
+    if (authored && tags.some(tag => tag.toLowerCase() === AGENT_AUTHORED_TAG)) return;
+    const remaining = (authored ? tags : tags.filter(tag => !matchesAuthorshipTag(tag)))
+      .map(tag => tag.slice(1));
     if (authored) remaining.push(AGENT_AUTHORED_TAG.slice(1));
     if (remaining.length > 0) frontmatter.tags = remaining;
     else delete frontmatter.tags;

@@ -18,16 +18,16 @@ Iris displays:
 
 Each indicator can be toggled independently in **Settings → Iris**. Changes apply immediately and persist across restarts. Removing the tag removes the indicators after Obsidian updates its metadata cache. Disabling Iris removes all its decorations.
 
-Both indicators show the same explanation: “This file is marked as agent-authored because it contains the #agent-authored tag.”
+Both indicators show the same explanation: “This file is marked as agent-authored because it contains #agent-authored or one of its nested tags.”
 
 ## Commands
 
 With a Markdown note active, open the command palette:
 
-- **Iris: Add agent-authored tag to file properties** adds `agent-authored` to the note's file-level `tags` property. Existing tags and other properties are preserved, and the property tag is not duplicated.
-- **Iris: Remove agent-authored tag from file properties** removes the exact tag only from the file-level `tags` property. All inline tags and the note body are left untouched.
+- **Iris: Add agent-authored tag to file properties** adds the exact `agent-authored` tag to the note's file-level `tags` property, even if a nested tag already exists. Existing tags and other properties are preserved, and the exact property tag is not duplicated.
+- **Iris: Remove agent-authored tag from file properties** removes `agent-authored` and all its nested tags from the file-level `tags` property. All inline tags and the note body are left untouched.
 
-These commands work in reading and editing views, and can be assigned hotkeys in Obsidian's settings. Tag matching remains case-insensitive. Property edits use Obsidian's frontmatter API, which may reformat YAML. The indicators still recognize inline `#agent-authored` tags, so unmarking the property does not hide them if an inline tag remains. Remove inline tags manually when needed.
+These commands work in reading and editing views, and can be assigned hotkeys in Obsidian's settings. Tag matching remains case-insensitive. Property edits use Obsidian's frontmatter API, which may reformat YAML. The indicators still recognize inline `#agent-authored` tags and their descendants, so removing the property tags does not hide them if a matching inline tag remains. Remove inline tags manually when needed.
 
 ## Screenshots
 
@@ -45,7 +45,7 @@ The banner identifies the open note, while the right-aligned explorer markers ma
 
 The tag is an explicit label, not an AI detector, proof of provenance, or a review status. Iris does not know which agent wrote a note or whether it has since been edited by a human.
 
-Matching is case-insensitive and exact: `#AGENT-AUTHORED` works, but `#agent-authored/reviewed` and `#agent-authoredness` do not. Tags in inline code and fenced code blocks do not count. Inline tags and frontmatter tags are read through Obsidian's metadata API.
+Matching is case-insensitive and includes nested tags: `#AGENT-AUTHORED`, `#agent-authored/reviewed`, and deeper descendants all work. Similar names such as `#agent-authoredness` and tags under a different parent such as `#team/agent-authored` do not. Nested tags currently use the same banner and explorer marker as the root tag; descriptor-specific banner elements are planned for the future. Tags in inline code and fenced code blocks do not count. Inline tags and frontmatter tags are read through Obsidian's metadata API.
 
 Decorations belong to open Markdown panes and the file explorer, not the note itself. They are not inserted into Markdown, embeds, exported content, or printed pages.
 
@@ -85,7 +85,7 @@ npm run build
 
 Future agent features can be separate child components owned by the plugin, reusing tag detection where appropriate. There is intentionally no speculative agent runtime, feature registry, or provider layer.
 
-The automated tests use a small Obsidian host double because the npm API package contains type definitions, not an executable host. They cover exact matching, independent toggles, multiple panes, explorer rebuilding, rename behavior, cleanup, and preserving other plugins' styles. Real Markdown parsing and rendering must also be checked in Obsidian.
+The automated tests use a small Obsidian host double because the npm API package contains type definitions, not an executable host. They cover root and nested tag matching, property-only tag edits, independent toggles, multiple panes, explorer rebuilding, rename behavior, cleanup, and preserving other plugins' styles. Real Markdown parsing and rendering must also be checked in Obsidian.
 
 ### Manual verification
 
