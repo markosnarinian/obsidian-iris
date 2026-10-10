@@ -20,6 +20,18 @@ Each indicator can be toggled independently in **Settings → Iris**. Changes ap
 
 Both indicators show the same explanation: “This file is marked as agent-authored because it contains the #agent-authored tag.”
 
+## Screenshots
+
+The banner identifies the open note, while the right-aligned explorer markers make tagged files easy to spot.
+
+### Dark theme
+
+![Iris in Obsidian's dark theme, showing the agent-authored banner, info button, and right-aligned explorer markers](docs/images/iris-dark.png)
+
+### Light theme
+
+![Iris in Obsidian's light theme, showing the agent-authored banner, info button, and right-aligned explorer markers](docs/images/iris-light.png)
+
 ## What the tag means
 
 The tag is an explicit label, not an AI detector, proof of provenance, or a review status. Iris does not know which agent wrote a note or whether it has since been edited by a human.
