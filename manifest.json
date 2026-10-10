@@ -1,0 +1,10 @@
+{
+  "id": "iris",
+  "name": "Iris",
+  "version": "0.1.0",
+  "minAppVersion": "1.8.7",
+  "description": "Distinguish agent-authored notes with a banner and explorer dot.",
+  "author": "Markos Narinian",
+  "authorUrl": "https://github.com/markosnarinian",
+  "isDesktopOnly": false
+}
