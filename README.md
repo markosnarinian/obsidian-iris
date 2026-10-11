@@ -9,7 +9,7 @@ Spot agent-authored notes at a glance in Obsidian.
 ## Features
 
 - **Recognize the note you're reading.** A compact banner identifies agent-authored files in reading and editing views. Its info button explains why it appears.
-- **Find them in the explorer.** Right-aligned dot-and-ring markers use your theme's accent color and work alongside [Color Tags](https://github.com/markosnarinian/obsidian-color-tags).
+- **Find them in the explorer.** Right-aligned dot markers use your theme's accent color and work alongside [Color Tags](https://github.com/markosnarinian/obsidian-color-tags).
 - **Choose your indicators.** Toggle the banner and explorer markers independently in **Settings → Iris Companion**.
 - **Keep your vault private.** No network requests or telemetry. Notes change only when you run a tagging command.
 

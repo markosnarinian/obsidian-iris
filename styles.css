@@ -4,7 +4,7 @@
   align-items: center;
   gap: var(--size-4-2);
   padding: var(--size-4-2) var(--size-4-4);
-  background: var(--background-secondary);
+  background: color-mix(in srgb, var(--interactive-accent) 8%, var(--background-secondary));
   color: color-mix(in srgb, var(--text-accent) 60%, var(--text-muted));
   font-size: var(--font-ui-small);
   user-select: none;
@@ -35,8 +35,6 @@
   block-size: 6px;
   border-radius: 50%;
   background: var(--iris-authored-color, var(--text-accent));
-  box-shadow: 0 0 0 1px var(--background-primary),
-    0 0 0 2px var(--iris-authored-color, var(--text-accent));
 }
 
 .iris-authored-banner > .iris-authored-info {
