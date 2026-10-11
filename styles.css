@@ -4,9 +4,8 @@
   align-items: center;
   gap: var(--size-4-2);
   padding: var(--size-4-2) var(--size-4-4);
-  border-block: 1px solid var(--background-modifier-border);
   background: var(--background-secondary);
-  color: var(--text-muted);
+  color: color-mix(in srgb, var(--text-accent) 60%, var(--text-muted));
   font-size: var(--font-ui-small);
   user-select: none;
 }
@@ -44,7 +43,7 @@
   display: flex;
   flex: 0 0 auto;
   margin-inline-start: auto;
-  color: var(--text-muted);
+  color: inherit;
   --icon-size: 16px;
 }
 
