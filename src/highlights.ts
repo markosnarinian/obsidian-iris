@@ -1,10 +1,19 @@
 import { App, Component, MarkdownView, TFile, displayTooltip, setIcon, setTooltip } from 'obsidian';
-import { AGENT_AUTHORED_TAG, isAgentAuthored } from './authorship';
+import { AGENT_AUTHORED_TAG, CONTAINS_AGENT_AUTHORED_TAG, getAuthorshipTag, type AuthorshipTag } from './authorship';
 import type { IrisSettings } from './settings';
 
 const DOT = 'iris-authored-dot';
 const BANNER = 'iris-authored-banner';
-const EXPLANATION = `This file is marked as agent-authored because it contains ${AGENT_AUTHORED_TAG} or one of its nested tags.`;
+const CONTAINS = 'iris-contains-authored';
+const LABELS = {
+  [AGENT_AUTHORED_TAG]: 'This file is agent-authored.',
+  [CONTAINS_AGENT_AUTHORED_TAG]: 'This file contains agent-authored material.',
+};
+
+function explanation(tag: AuthorshipTag): string {
+  const status = tag === AGENT_AUTHORED_TAG ? 'as agent-authored' : 'as containing agent-authored material';
+  return `This file is marked ${status} because it contains ${tag} or one of its nested tags.`;
+}
 
 /** Owns only Iris decorations; never replaces host content or styles. */
 export class AuthorshipHighlights extends Component {
@@ -73,9 +82,9 @@ export class AuthorshipHighlights extends Component {
     this.observers.set(root, observer);
   }
 
-  private authored(file: TFile | null): boolean {
+  private authorship(file: TFile | null): AuthorshipTag | null {
     return file !== null && file.extension === 'md'
-      && isAgentAuthored(this.app.metadataCache.getFileCache(file));
+      ? getAuthorshipTag(this.app.metadataCache.getFileCache(file)) : null;
   }
 
   private updateExplorer(root: HTMLElement): void {
@@ -83,40 +92,46 @@ export class AuthorshipHighlights extends Component {
     for (const row of root.querySelectorAll<HTMLElement>('.nav-file-title[data-path]')) {
       const path = row.getAttribute('data-path');
       const file = path ? this.app.vault.getAbstractFileByPath(path) : null;
-      const visible = this.settings.showExplorerDot && file instanceof TFile && this.authored(file);
+      const tag = this.settings.showExplorerDot && file instanceof TFile ? this.authorship(file) : null;
       const existing = row.querySelector(`:scope > .${DOT}`);
-      if (!visible) {
+      if (!tag) {
         existing?.remove();
-      } else if (!existing) {
+      } else if (existing?.getAttribute('data-authorship') !== tag) {
+        existing?.remove();
         const label = row.querySelector(':scope > .nav-file-title-content');
         if (!label) continue;
         const dot = row.createSpan({ cls: DOT });
+        dot.classList.toggle(CONTAINS, tag === CONTAINS_AGENT_AUTHORED_TAG);
+        dot.setAttribute('data-authorship', tag);
         dot.setAttribute('role', 'img');
         // The host treats zero as its default delay; 1ms is effectively immediate.
-        setTooltip(dot, EXPLANATION, { placement: 'right', delay: 1 });
+        setTooltip(dot, explanation(tag), { placement: 'right', delay: 1 });
       }
     }
   }
 
   private updateNote(view: MarkdownView): void {
     const root = view.contentEl;
-    const authored = this.authored(view.file);
+    const tag = this.settings.showBanner ? this.authorship(view.file) : null;
     const banner = root.querySelector(`:scope > .${BANNER}`);
-    if (!authored || !this.settings.showBanner) {
+    if (!tag || banner?.getAttribute('data-authorship') !== tag) {
       if (banner) this.hideInfoTooltip(root);
       banner?.remove();
-    } else if (!banner) {
+    }
+    if (tag && banner?.getAttribute('data-authorship') !== tag) {
       const element = root.createDiv({ cls: BANNER });
+      element.classList.toggle(CONTAINS, tag === CONTAINS_AGENT_AUTHORED_TAG);
+      element.setAttribute('data-authorship', tag);
       element.setAttribute('role', 'note');
-      element.createSpan({ text: 'This file is agent-authored.' });
+      element.createSpan({ text: LABELS[tag] });
       const info = element.createEl('button', {
         cls: 'clickable-icon iris-authored-info',
         attr: { type: 'button' },
       });
       setIcon(info, 'info');
-      setTooltip(info, EXPLANATION, { placement: 'bottom' });
+      setTooltip(info, explanation(tag), { placement: 'bottom' });
       info.addEventListener('click', () => {
-        displayTooltip(info, EXPLANATION, {
+        displayTooltip(info, explanation(tag), {
           placement: 'bottom', classes: ['iris-authored-info-tooltip'],
         });
       });

@@ -3,7 +3,7 @@ import type { App, CachedMetadata } from 'obsidian';
 import { Events, MarkdownView, TFile } from './obsidian';
 import { AuthorshipHighlights } from '../src/highlights';
 import { DEFAULT_SETTINGS } from '../src/settings';
-import { isAgentAuthored } from '../src/authorship';
+import { getAuthorshipTag } from '../src/authorship';
 
 const tagged = { frontmatter: { tags: ['agent-authored'] } };
 const count = (selector: string) => document.querySelectorAll(selector).length;
@@ -61,12 +61,67 @@ describe('agent-authored highlights', () => {
     for (const cache of [tagged, { tags: [{ tag: '#AGENT-AUTHORED' }] },
       { tags: [{ tag: '#agent-authored/reviewed' }] },
       { frontmatter: { tags: ['AGENT-AUTHORED/reviewed/by-human'] } }]) {
-      expect(isAgentAuthored(cache as CachedMetadata)).toBe(true);
+      expect(getAuthorshipTag(cache as CachedMetadata)).toBe('#agent-authored');
     }
     for (const cache of [null, {}, { tags: [{ tag: '#agent-authoredness' }] },
       { tags: [{ tag: '#agent-authoredness/reviewed' }] },
       { frontmatter: { tags: ['team/agent-authored'] } }]) {
-      expect(isAgentAuthored(cache as CachedMetadata | null)).toBe(false);
+      expect(getAuthorshipTag(cache as CachedMetadata | null)).toBe(null);
+    }
+  });
+
+  it('distinguishes material tags, rejects similar names, and prioritizes whole-file authorship', () => {
+    for (const cache of [
+      { tags: [{ tag: '#CONTAINS-AGENT-AUTHORED' }] },
+      { frontmatter: { tags: ['contains-agent-authored/reviewed/by-human'] } },
+    ]) {
+      expect(getAuthorshipTag(cache as CachedMetadata)).toBe('#contains-agent-authored');
+    }
+    for (const tag of ['#contains-agent-authoredness', '#contains-agent-authoredness/reviewed', '#team/contains-agent-authored']) {
+      expect(getAuthorshipTag({ tags: [{ tag }] } as CachedMetadata)).toBe(null);
+    }
+    expect(getAuthorshipTag({
+      frontmatter: { tags: ['contains-agent-authored'] },
+      tags: [{ tag: '#agent-authored/reviewed' }],
+    } as CachedMetadata)).toBe('#agent-authored');
+  });
+
+  it('refreshes labels and decorations when a file switches between authorship states', async () => {
+    const f = fixture();
+    highlights = f.highlights;
+    const second = new MarkdownView(f.files[0]!);
+    f.views.push(second);
+    document.body.append(second.contentEl);
+    await settle();
+    f.views[0]!.contentEl.querySelector('button')!.click();
+
+    for (const tags of [
+      ['contains-agent-authored/reviewed'],
+      ['contains-agent-authored', 'agent-authored'],
+      ['contains-agent-authored'],
+      [],
+    ]) {
+      f.cache.set('Agent.md', { frontmatter: { tags } });
+      f.metadataCache.trigger('changed');
+      await settle();
+      expect(count('[role="tooltip"]')).toBe(0);
+      const contains = tags.length > 0 && !tags.includes('agent-authored');
+      const text = contains ? 'This file contains agent-authored material.' : 'This file is agent-authored.';
+      expect(count('.iris-authored-banner')).toBe(tags.length ? 2 : 0);
+      expect(count('.iris-authored-dot')).toBe(tags.length ? 1 : 0);
+      expect(count('.iris-contains-authored')).toBe(contains ? 3 : 0);
+      if (!tags.length) continue;
+      for (const view of [f.views[0]!, second]) {
+        expect(view.contentEl.querySelector('[role="note"]')!.textContent).toBe(text);
+        const info = view.contentEl.querySelector('button')!;
+        expect(info.getAttribute('aria-label')).toContain(contains ? '#contains-agent-authored' : '#agent-authored');
+        info.click();
+        expect(document.querySelector('[role="tooltip"]')!.textContent).toBe(info.getAttribute('aria-label'));
+        info.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      }
+      expect(f.rows[0]!.querySelector('[role="img"]')!.getAttribute('aria-label')).toContain(
+        contains ? 'as containing agent-authored material' : 'as agent-authored',
+      );
     }
   });
 

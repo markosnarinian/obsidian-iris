@@ -10,6 +10,12 @@
   user-select: none;
 }
 
+.iris-authored-banner.iris-contains-authored {
+  border: 1px solid var(--interactive-accent);
+  background: transparent;
+  color: var(--text-accent);
+}
+
 .iris-authored-info:focus-visible {
   outline: 2px solid var(--interactive-accent);
   outline-offset: 2px;
@@ -35,6 +41,12 @@
   block-size: 6px;
   border-radius: 50%;
   background: var(--iris-authored-color, var(--text-accent));
+}
+
+.nav-file-title > .iris-authored-dot.iris-contains-authored::before {
+  box-sizing: border-box;
+  border: 1px solid var(--iris-authored-color, var(--text-accent));
+  background: transparent;
 }
 
 .iris-authored-banner > .iris-authored-info {

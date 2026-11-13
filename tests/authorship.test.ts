@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { App, CachedMetadata } from 'obsidian';
 import { TFile } from './obsidian';
-import { setAgentAuthored } from '../src/authorship';
+import { CONTAINS_AGENT_AUTHORED_TAG, setAgentAuthored } from '../src/authorship';
 
 function note(frontmatter: Record<string, unknown>, body = '', inlineTags: string[] = []) {
   const file = new TFile('Draft.md');
@@ -26,6 +26,22 @@ function note(frontmatter: Record<string, unknown>, body = '', inlineTags: strin
 }
 
 describe('authorship tag edits', () => {
+  it('edits material tags independently without changing whole-file authorship or the body', async () => {
+    const f = note({ tags: ['research', 'agent-authored', 'contains-agent-authored/reviewed'], title: 'Keep' },
+      'Human text with #contains-agent-authored material.', ['#contains-agent-authored']);
+    await setAgentAuthored(f.app, f.file, true, CONTAINS_AGENT_AUTHORED_TAG);
+    await setAgentAuthored(f.app, f.file, true, CONTAINS_AGENT_AUTHORED_TAG);
+    expect(f.frontmatter.tags).toEqual([
+      'research', 'agent-authored', 'contains-agent-authored/reviewed', 'contains-agent-authored',
+    ]);
+    await setAgentAuthored(f.app, f.file, false);
+    expect(f.frontmatter.tags).toEqual(['research', 'contains-agent-authored/reviewed', 'contains-agent-authored']);
+    await setAgentAuthored(f.app, f.file, true);
+    await setAgentAuthored(f.app, f.file, false, CONTAINS_AGENT_AUTHORED_TAG);
+    expect(f.frontmatter).toEqual({ tags: ['research', 'agent-authored'], title: 'Keep' });
+    expect(f.body()).toBe('Human text with #contains-agent-authored material.');
+  });
+
   it('marks notes through their tags property without duplicating tags or changing other properties', async () => {
     for (const tags of [undefined, null, 'research', ['research', 'agent-authored/reviewed']]) {
       const f = note({ ...(tags === undefined ? {} : { tags }), title: 'Keep this' }, 'Untouched body');
